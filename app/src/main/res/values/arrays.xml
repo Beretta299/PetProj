@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="registration_link_text">
+
+        <item>@string/registration_link_label</item>
+        <item>@string/registration_link_action</item>
+    </string-array>
+</resources>

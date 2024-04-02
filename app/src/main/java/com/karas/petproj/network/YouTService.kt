@@ -11,5 +11,5 @@ interface YouTService {
 
     @GET("videos?part=snippet%2CcontentDetails%2Cstatistics")
     suspend fun getVideoStatistic(@Query("key")
-                                      key: String = "", @Query("id") videoId: String): Response<Statistics>
+                                      key: String = "AIzaSyBuuVjd0knHHVYqZswo2BU0gxkSF0sHbZ4", @Query("id") videoId: String): Response<Statistics>
 }

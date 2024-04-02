@@ -1,3 +1,21 @@
 <resources>
+
+    <!--Login-->
     <string name="app_name">PetProj</string>
+    <string name="login_label">Login</string>
+    <string name="repeat_password_label">Repeat your password</string>
+    <string name="pass_label">Password</string>
+    <string name="login_button_action">Login</string>
+    <string name="registration_link_label">Still don`t have an account?</string>
+    <string name="registration_link_action">Register now!</string>
+    <!--/Login-->
+
+    <!--Registration-->
+    <string name="name_label">Name</string>
+    <string name="email_label">E-mail</string>
+    <string name="password_label">Password</string>
+    <string name="register_button_action">Register</string>
+    <string name="registration_label">Registration</string>
+    <!--Registration-->
+
 </resources>
