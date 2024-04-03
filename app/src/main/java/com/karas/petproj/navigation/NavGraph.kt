@@ -6,11 +6,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
-import com.karas.petproj.main.MainViewModel
+import com.karas.petproj.main.LoginViewModel
+import com.karas.petproj.main.RegisterViewModel
 
 @Composable
 fun NavGraph(
-    viewModel: MainViewModel,
+    loginViewModel: LoginViewModel,
+    registerViewModel: RegisterViewModel,
     navController: NavHostController,
 ) {
     Column(
@@ -21,7 +23,7 @@ fun NavGraph(
             navController = navController,
             startDestination = MAIN_ROUTE
         ) {
-            mainNavGraph(navHostController = navController, viewModel = viewModel)
+            mainNavGraph(navHostController = navController, loginViewModel, registerViewModel)
         }
     }
 }
