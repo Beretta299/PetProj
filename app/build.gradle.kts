@@ -16,7 +16,7 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "com.karas.petproj.runner.CustomTestRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
@@ -53,13 +53,28 @@ android {
 }
 
 dependencies {
+    val room_version = "2.6.1"
+    val dagger_hilt_version = "2.48"
+    implementation("androidx.room:room-runtime:$room_version")
+    // To use Kotlin annotation processing tool (kapt)
+    kapt("androidx.room:room-compiler:$room_version")
+    // optional - Kotlin Extensions and Coroutines support for Room
+    implementation("androidx.room:room-ktx:$room_version")
+    implementation("io.coil-kt:coil-compose:2.6.0")
+
+
+
     implementation ("com.squareup.retrofit2:retrofit:2.10.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-    implementation("com.google.dagger:hilt-android:2.48")
-    kapt("com.google.dagger:hilt-android-compiler:2.48")
+    implementation("com.google.dagger:hilt-android:$dagger_hilt_version")
+    kapt("com.google.dagger:hilt-android-compiler:$dagger_hilt_version")
+    androidTestImplementation ("com.google.dagger:hilt-android-testing:$dagger_hilt_version")
+    kaptAndroidTest("com.google.dagger:hilt-android-compiler:$dagger_hilt_version")
     implementation ("androidx.constraintlayout:constraintlayout-compose:1.0.1")
     implementation("androidx.compose.material3:material3:1.2.1")
     implementation ("androidx.navigation:navigation-compose:2.7.1")
+    testImplementation ("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1-Beta")
+
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

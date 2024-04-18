@@ -1,6 +1,6 @@
 package com.karas.petproj.data
 
-data class ErrorStates(var hasNameError: Boolean = false,
-                        var hasEmailError: Boolean = false,
-                        var hasPasswordError: Boolean = false,
-                        var hasRepeatPasswordError: Boolean = false)
+data class ErrorStates(var hasNameError: Boolean = true,
+                        var hasEmailError: Boolean = true,
+                        var hasPasswordError: Boolean = true,
+                        var hasRepeatPasswordError: Boolean = true)

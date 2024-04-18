@@ -55,7 +55,7 @@ fun RegistrationScreen(viewModel: RegisterViewModel, navController: NavControlle
                     .height(8.dp))
                 ActionButton(R.string.registration_label, {
 
-                })
+                }, isActive = viewModel.buttonUIState.value)
             }
         }
     }

@@ -1,12 +1,32 @@
 package com.karas.petproj.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideIn
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOut
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -19,13 +39,21 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -36,9 +64,13 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.karas.petproj.R
+import com.karas.petproj.db.data.SwipeAbleUser
+import kotlinx.coroutines.delay
+import kotlin.math.roundToInt
 
 
 @Composable
@@ -97,6 +129,7 @@ fun TitleLabel(resourceID: Int) {
 
 @Composable
 fun ActionButton(textID: Int, onClick: () -> Unit,
+    isActive: Boolean = true,
                  startColor: Int = R.color.button_start_color,
                  endColor: Int = R.color.button_end_color) {
     Button(onClick = { onClick() },
@@ -108,14 +141,7 @@ fun ActionButton(textID: Int, onClick: () -> Unit,
             .fillMaxWidth()
             .heightIn(48.dp)
             .background(
-                brush = Brush.horizontalGradient(
-                    listOf(
-                        colorResource(id = startColor),
-                        colorResource(
-                            id = endColor
-                        )
-                    )
-                )
+                brush = if (isActive) getActiveBrush() else getInActiveBrush()
             ), contentAlignment = Alignment.Center
         ) {
             Text(text = stringResource(id = textID),
@@ -126,8 +152,221 @@ fun ActionButton(textID: Int, onClick: () -> Unit,
 }
 
 
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 @Preview(showSystemUi = true)
 fun LoginInputFieldPreview() {
-    UserInputField(R.string.login_label)
+//    UserInputField(R.string.login_label)
+    var isVisible by remember { mutableStateOf(false) }
+
+    // Transition specification for both sliding vertically and horizontally
+    val enterTransition = EnterTransition.None
+
+    val exitTransition = slideOut(
+        // Custom target offset combining X and Y axes
+        targetOffset = { fullSize ->
+            IntOffset(
+                x = fullSize.width * 3,  // Exit to the right of the screen
+                y = -fullSize.height * 3  // Exit to the bottom of the screen
+            )
+        },
+        animationSpec = tween(durationMillis = 1000)
+    )
+
+    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+        AnimatedVisibility(
+            visible = isVisible,
+            enter = enterTransition,
+            exit = exitTransition
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(100.dp)
+                    .background(Color.Magenta)
+            )
+        }
+
+        Button(onClick = { isVisible = !isVisible }) {
+            Text(if (isVisible) "Hide" else "Show")
+        }
+    }
+}
+
+@Composable
+fun getActiveBrush(): Brush {
+    return Brush.horizontalGradient(
+        listOf(
+            colorResource(id = R.color.button_start_color),
+            colorResource(
+                id = R.color.button_end_color
+            )
+        )
+    )
+}
+
+@Composable
+fun getInActiveBrush(): Brush {
+    return Brush.horizontalGradient(
+        listOf(
+            colorResource(id = R.color.inactive_button_start_color),
+            colorResource(
+                id = R.color.inactive_button_end_color
+            )
+        )
+    )
+}
+
+@Composable
+fun SwipeCard(onSwipeLeft: () -> Unit = {},
+              onSwipeRight: () -> Unit = {},
+              swipeThreshold: Float = 400f,
+              sensitivityFactor: Float = 2f,
+              content: @Composable () -> Unit,
+              model: SwipeAbleUser) {
+
+    var offset by remember { mutableStateOf(0f) }
+    var dismissRight by remember { mutableStateOf(false) }
+    var dismissLeft by remember { mutableStateOf(false) }
+    var dismissAnimState by remember { mutableStateOf(model.swipedState) }
+    val density = LocalDensity.current.density
+
+    println("DismissAnimState is ${dismissAnimState}")
+
+    LaunchedEffect(dismissRight) {
+        if (dismissRight) {
+            dismissAnimState = 1
+            delay(300)
+            onSwipeRight.invoke()
+            dismissAnimState = 0
+            dismissRight = false
+        }
+    }
+
+    LaunchedEffect(dismissLeft) {
+        if (dismissLeft) {
+            delay(300)
+            onSwipeLeft.invoke()
+            dismissAnimState = 0
+            dismissLeft = false
+        }
+    }
+
+    Box(modifier = Modifier
+        .offset { IntOffset(offset.roundToInt(), 0) }
+        .pointerInput(Unit) {
+            detectHorizontalDragGestures(onDragEnd = {
+                offset = 0f
+            }) { change, dragAmount ->
+
+                offset += (dragAmount / density) * sensitivityFactor
+                when {
+                    offset > swipeThreshold -> {
+                        dismissRight = true
+                    }
+
+                    offset < -swipeThreshold -> {
+                        dismissAnimState = - 1
+                        dismissLeft = true
+                    }
+                }
+                if (change.positionChange() != Offset.Zero) change.consume()
+            }
+        }
+        .graphicsLayer(
+            alpha = 10f - animateFloatAsState(if (dismissRight) 1f else 0f, label = "").value,
+            rotationZ = animateFloatAsState(offset / 50, label = "").value
+        )) {
+//        if(dismissAnimState == 0) {
+            content()
+//        }
+
+        val exitLeftAnim = slideOut(
+            // Custom target offset combining X and Y axes
+            targetOffset = { fullSize ->
+                IntOffset(
+                    x = -fullSize.width * 3,  // Exit to the right of the screen
+                    y = -fullSize.height * 3  // Exit to the bottom of the screen
+                )
+            },
+            animationSpec = tween(durationMillis = 300)
+        ) + fadeOut()
+
+        val exitRightAnim = slideOut(
+            // Custom target offset combining X and Y axes
+            targetOffset = { fullSize ->
+                IntOffset(
+                    x = fullSize.width * 3,  // Exit to the right of the screen
+                    y = -fullSize.height * 3  // Exit to the bottom of the screen
+                )
+            },
+            animationSpec = tween(durationMillis = 500)
+        ) + fadeOut()
+
+        AnimatedVisibility(visible = dismissAnimState == - 1,
+            enter = EnterTransition.None,
+            exit = exitLeftAnim
+        ) {
+            println("We entered zero state ${dismissAnimState}")
+            content()
+        }
+
+        AnimatedVisibility(visible = dismissAnimState == 1,
+            enter = EnterTransition.None,
+            exit = exitRightAnim
+        ) {
+            println("We entered zero state ${dismissAnimState}")
+            content()
+        }
+    }
+}
+
+fun getEnterAnimation(currentValue: Int): EnterTransition {
+    return when (currentValue) {
+//        -1 -> slideInVertically {
+//            20000
+//        } + expandVertically(
+//            // Expand from the top.
+//            expandFrom = Alignment.Bottom
+//        ) + fadeIn(
+//            // Fade in with the initial alpha of 0.3f.
+//            initialAlpha = 0.3f
+//        )
+//        1 -> slideInHorizontally { it } + fadeIn()
+        else -> EnterTransition.None
+    }
+}
+
+fun getExitAnimation(currentValue: Int): ExitTransition {
+    return when (currentValue) {
+        -1 -> slideOut(
+            // Custom target offset combining X and Y axes
+            targetOffset = { fullSize ->
+                IntOffset(
+                    x = -fullSize.width * 3,  // Exit to the right of the screen
+                    y = -fullSize.height * 3  // Exit to the bottom of the screen
+                )
+            },
+            animationSpec = tween(durationMillis = 1000)
+        )
+        1 -> slideOut(
+            // Custom target offset combining X and Y axes
+            targetOffset = { fullSize ->
+                IntOffset(
+                    x = fullSize.width * 3,  // Exit to the right of the screen
+                    y = -fullSize.height * 3  // Exit to the bottom of the screen
+                )
+            },
+            animationSpec = tween(durationMillis = 1000)
+        )
+        else -> slideOut(
+            // Custom target offset combining X and Y axes
+            targetOffset = { fullSize ->
+                IntOffset(
+                    x = -fullSize.width * 3,  // Exit to the right of the screen
+                    y = -fullSize.height * 3  // Exit to the bottom of the screen
+                )
+            },
+            animationSpec = tween(durationMillis = 1000)
+        )
+    }
 }

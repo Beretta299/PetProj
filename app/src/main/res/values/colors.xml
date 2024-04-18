@@ -10,4 +10,6 @@
     <color name="input_field_color">#DDDDDD</color>
     <color name="button_start_color">#5755FE</color>
     <color name="button_end_color">#7AA2E3</color>
+    <color name="inactive_button_start_color">#9DB2BF</color>
+    <color name="inactive_button_end_color">#DDE6ED</color>
 </resources>
