@@ -20,13 +20,16 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -166,7 +169,7 @@ fun LoginInputFieldPreview() {
         // Custom target offset combining X and Y axes
         targetOffset = { fullSize ->
             IntOffset(
-                x = fullSize.width * 3,  // Exit to the right of the screen
+                x = -fullSize.width * 3,  // Exit to the right of the screen
                 y = -fullSize.height * 3  // Exit to the bottom of the screen
             )
         },
@@ -179,17 +182,22 @@ fun LoginInputFieldPreview() {
             enter = enterTransition,
             exit = exitTransition
         ) {
-            Box(
-                modifier = Modifier
-                    .size(100.dp)
-                    .background(Color.Magenta)
-            )
+            Column(modifier = Modifier.fillMaxWidth(1f).height(100.dp).background(Color.Red)) {
+
+            }
         }
 
         Button(onClick = { isVisible = !isVisible }) {
             Text(if (isVisible) "Hide" else "Show")
         }
     }
+
+    Column(modifier = Modifier.fillMaxSize(1f).background(Color.Red)) {
+        Box(modifier = Modifier.background(Color.Red).width(100.dp).height(100.dp)){
+
+        }
+    }
+
 }
 
 @Composable
@@ -219,15 +227,17 @@ fun getInActiveBrush(): Brush {
 @Composable
 fun SwipeCard(onSwipeLeft: () -> Unit = {},
               onSwipeRight: () -> Unit = {},
-              swipeThreshold: Float = 400f,
+              swipeThreshold: Float = 350f,
               sensitivityFactor: Float = 2f,
               content: @Composable () -> Unit,
+              nextContent: @Composable () -> Unit,
               model: SwipeAbleUser) {
 
     var offset by remember { mutableStateOf(0f) }
     var dismissRight by remember { mutableStateOf(false) }
     var dismissLeft by remember { mutableStateOf(false) }
     var dismissAnimState by remember { mutableStateOf(model.swipedState) }
+    var dismissAnimStateCancel by remember { mutableStateOf(false) }
     val density = LocalDensity.current.density
 
     println("DismissAnimState is ${dismissAnimState}")
@@ -239,34 +249,52 @@ fun SwipeCard(onSwipeLeft: () -> Unit = {},
             onSwipeRight.invoke()
             dismissAnimState = 0
             dismissRight = false
+
+            offset = 0f
         }
     }
 
     LaunchedEffect(dismissLeft) {
         if (dismissLeft) {
-            delay(300)
+            dismissAnimState = - 1
+            delay(100)
             onSwipeLeft.invoke()
-            dismissAnimState = 0
             dismissLeft = false
+            dismissAnimState = 0
+            offset = 0f
+//            dismissAnimStateCancel = true
         }
     }
+
+    nextContent()
 
     Box(modifier = Modifier
         .offset { IntOffset(offset.roundToInt(), 0) }
         .pointerInput(Unit) {
             detectHorizontalDragGestures(onDragEnd = {
-                offset = 0f
+                println("Log for testing offset ${offset} treshhold ${swipeThreshold}")
+
+                if(offset > swipeThreshold) {
+                    dismissRight = true
+                    offset = 0f
+                } else if(offset < -swipeThreshold) {
+                    dismissLeft = true
+                    dismissAnimStateCancel = false
+                } else {
+                    offset = 0f
+                }
+
             }) { change, dragAmount ->
 
                 offset += (dragAmount / density) * sensitivityFactor
+
                 when {
                     offset > swipeThreshold -> {
-                        dismissRight = true
+
                     }
 
                     offset < -swipeThreshold -> {
-                        dismissAnimState = - 1
-                        dismissLeft = true
+
                     }
                 }
                 if (change.positionChange() != Offset.Zero) change.consume()
@@ -274,7 +302,8 @@ fun SwipeCard(onSwipeLeft: () -> Unit = {},
         }
         .graphicsLayer(
             alpha = 10f - animateFloatAsState(if (dismissRight) 1f else 0f, label = "").value,
-            rotationZ = animateFloatAsState(offset / 50, label = "").value
+            rotationZ = animateFloatAsState(offset / 50, label = "").value,
+            translationX = animateFloatAsState(offset / 50, label = "").value
         )) {
 //        if(dismissAnimState == 0) {
             content()
@@ -299,24 +328,24 @@ fun SwipeCard(onSwipeLeft: () -> Unit = {},
                     y = -fullSize.height * 3  // Exit to the bottom of the screen
                 )
             },
-            animationSpec = tween(durationMillis = 500)
+            animationSpec = tween(durationMillis = 1000)
         ) + fadeOut()
 
         AnimatedVisibility(visible = dismissAnimState == - 1,
             enter = EnterTransition.None,
-            exit = exitLeftAnim
+            exit = if(dismissAnimStateCancel) ExitTransition.None else exitLeftAnim
         ) {
             println("We entered zero state ${dismissAnimState}")
             content()
         }
 
-        AnimatedVisibility(visible = dismissAnimState == 1,
-            enter = EnterTransition.None,
-            exit = exitRightAnim
-        ) {
-            println("We entered zero state ${dismissAnimState}")
-            content()
-        }
+//        AnimatedVisibility(visible = dismissAnimState == 1,
+//            enter = EnterTransition.None,
+//            exit = exitRightAnim
+//        ) {
+//            println("We entered zero state ${dismissAnimState}")
+//            content()
+//        }
     }
 }
 

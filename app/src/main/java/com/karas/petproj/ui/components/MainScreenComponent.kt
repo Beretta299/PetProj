@@ -1,8 +1,6 @@
 package com.karas.petproj.ui.components
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -36,20 +34,29 @@ import com.karas.petproj.main.MainViewModel
 fun MainScreenComponent(viewModel: MainViewModel) {
 
     val swipeAbleUsers = viewModel.userSwipedImage
-    swipeAbleUsers.forEachIndexed { index, swipeAbleUser ->
-        Surface(color = Color.White,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(8.dp)) {
-            SwipeCard(content = {
-                ItemCard(swipeAbleUser)
-            }, onSwipeLeft = {
-                viewModel.onSwipeLeft()
-            }, onSwipeRight = {
-                viewModel.onSwipeRight()
-            }, model = swipeAbleUser)
+    for(itemIndex in 0..<swipeAbleUsers.size) {
+        val item = swipeAbleUsers.get(itemIndex)
+        var nextItem = item
+        if(itemIndex != swipeAbleUsers.size - 1) {
+
+            nextItem = swipeAbleUsers[itemIndex + 1]
+            Surface(color = Color.White,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(8.dp)) {
+                SwipeCard(content = {
+                    ItemCard(item)
+                }, nextContent = {
+                    ItemCard(nextItem) }
+                    , onSwipeLeft = {
+                    viewModel.onSwipeLeft()
+                }, onSwipeRight = {
+                    viewModel.onSwipeRight()
+                }, model = item)
+            }
         }
     }
+
 }
 
 @Composable
