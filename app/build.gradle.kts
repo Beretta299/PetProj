@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.android)
     kotlin("kapt")
     id("com.google.dagger.hilt.android")
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -74,6 +75,16 @@ dependencies {
     implementation("androidx.compose.material3:material3:1.2.1")
     implementation ("androidx.navigation:navigation-compose:2.7.1")
     testImplementation ("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1-Beta")
+    implementation ("com.google.accompanist:accompanist-flowlayout:0.24.13-rc")
+    implementation(platform("com.google.firebase:firebase-bom:33.0.0"))
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-firestore")
+    implementation ("com.google.firebase:firebase-firestore-ktx")
+
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.6.4")
+
+
 
 
     implementation(libs.androidx.core.ktx)

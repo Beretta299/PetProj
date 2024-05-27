@@ -4,7 +4,7 @@ import com.karas.petproj.db.data.UserEntity
 import com.karas.petproj.db.utils.UserLocalDataSourceContract
 import kotlinx.coroutines.delay
 
-interface YouTRepository {
+interface  YouTRepository {
     suspend fun hasUserInSystem(): Boolean
 
     suspend fun addUser(user: UserEntity)

@@ -1,12 +1,16 @@
 package com.karas.petproj.main
 
+import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.karas.petproj.db.data.SwipeAbleUser
 import com.karas.petproj.navigation.NavigationItem
+import com.karas.petproj.network.FireStoreImplementation
 import com.karas.petproj.repository.YouTRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -24,7 +28,17 @@ class MainViewModel @Inject constructor(val youTRepository: YouTRepository) : Vi
         "https://cdn.motor1.com/images/mgl/Rq9Lor/s1/future-cars-bmw-neue-klasse-ev.jpg",
         "https://cdn.motor1.com/images/mgl/Vzn9J9/s1/future-cars-chevrolet-corvette-zr1-zora.jpg")
 
+    init {
+        viewModelScope.launch {
+            for(it in FireStoreImplementation().readData()) {
+                Log.d("TAGGAA", it.toString())
+            }
+        }
+    }
+
     suspend fun getStartDestination() {
+        var array = mutableListOf(3,4,5)
+        array.toIntArray().indices
         youTRepository.hasUserInSystem()
         userLoggedState.value = if(false) NavigationItem.Login.route else NavigationItem.Main.route
     }

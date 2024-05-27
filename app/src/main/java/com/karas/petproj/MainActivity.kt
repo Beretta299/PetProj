@@ -11,12 +11,10 @@ import com.karas.petproj.main.LoginViewModel
 import com.karas.petproj.main.MainViewModel
 import com.karas.petproj.main.RegisterViewModel
 import com.karas.petproj.navigation.NavGraph
-import com.karas.petproj.network.YouTService
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
